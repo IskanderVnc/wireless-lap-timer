@@ -9,7 +9,7 @@ pinMode( triggerPort, OUTPUT );
 pinMode( echoPort, INPUT );
 pinMode( buzzer, OUTPUT );
 Serial.begin( 9600 );
-Serial.println( "Sensore ultrasuoni: ");
+Serial.println( "Ultrasounds sensor : ");
 }
 void loop() {
 //trigger output set to LOW
@@ -29,14 +29,14 @@ enableBuzzer();
 delay(10);
 }
 
-// FUNCTION IMPLEMENTING BLINKING RED LED WITHOUT delay()
-unsigned long previousMillis = 0;  // will store last time LED was updated
+// FUNCTION ENABLING BUZZER WITH A TIMEOUT OF 5 SECONDS
+unsigned long previousMillis = 0;  // will store last time the buzzer has been enabled
 const long interval = 5000; 
 
 void enableBuzzer(){
   unsigned long currentMillis = millis();
   if (currentMillis - previousMillis >= interval) {
-    // save the last time you enabled the LED
+    // save the last time you enabled the buzzer
     previousMillis = currentMillis;
 
   digitalWrite(buzzer, HIGH);
