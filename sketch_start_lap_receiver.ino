@@ -27,22 +27,32 @@ void setup() {
 
 int detectedLight = 0;
 int calibrating = false;
+int systemStatus = 0;
 
 void loop() {
   // put your main code here, to run repeatedly:
   detectedLight = analogRead(photoresistorPin);
+  Serial.println(detectedLight);
+  readButton1WithDebouncing(button1Pin);
 
-  readButton1WithDebouncing(button1Pin,redLed1Pin);
-  // CASE 1 : IDLE ( Start lap not pressed or computation terminated / no calibration in progress or calibration just terminated)
+  switch (systemStatus) { 	
+		case 0: 
+      // CASE 0 : IDLE ( Start lap not pressed or computation terminated / no calibration in progress or calibration just terminated)
+			Serial.println("IDLE");
+			break;//causa l'uscita immediata dallo switch  
+		case 1: 
+      // CASE 1 : CALIBRATION IN PROGRESS
+			Serial.println("CALIBRATION IN PROGRESS"); 
+      calibrateLaser(detectedLight);
+			break; 
+		case 2: 
+      // CASE 2 : LAP CALCULATION IN PROGRESS
+			Serial.println("LAP CALCULATION IN PROGRESS");
+			break; 
+		} 
+  }
 
-  // CASE 2 : CALIBRATION IN PROGRESS
-
-  // CASE 3 : LAP CALCULATION IN PROGRESS
-
-  
-}
-
-void readButton1WithDebouncing(int buttonPin, int componentPin){
+void readButton1WithDebouncing(int buttonPin){
  // read the state of the switch into a local variable:
   int reading = digitalRead(buttonPin);
 
@@ -65,17 +75,17 @@ void readButton1WithDebouncing(int buttonPin, int componentPin){
 
       // only toggle the LED if the new button state is HIGH
       if (button1State == HIGH) {
-        component1State = !component1State;
+        systemStatus = !systemStatus;
       }
     }
   }
   // set the LED:
-  digitalWrite(componentPin, component1State);
+  //digitalWrite(componentPin, component1State);
   // save the reading. Next time through the loop, it'll be the lastButtonState:
   lastButton1State = reading;
 }
 
-void calibrateLaser(){
+void calibrateLaser(int lightLevel){
  unsigned long startTime = millis();
    while(millis() - startTime < 30000)
    {
