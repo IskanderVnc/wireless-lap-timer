@@ -1,5 +1,5 @@
-int redLed1Pin = 2;
-int redLed2Pin = 3;
+int redLedPin = 2;
+int blueLedPin = 3;
 int greenLedPin = 4;
 
 int photoresistorPin = A0;
@@ -18,8 +18,8 @@ unsigned long debounceDelay = 50;    // the debounce time; increase if the outpu
 
 void setup() {
   // put your setup code here, to run once:
-  pinMode(redLed1Pin,OUTPUT);
-  pinMode(redLed2Pin,OUTPUT);
+  pinMode(redLedPin,OUTPUT);
+  pinMode(blueLedPin,OUTPUT);
   pinMode(greenLedPin,OUTPUT);
   pinMode(button1Pin,INPUT);
   Serial.begin(9600);
