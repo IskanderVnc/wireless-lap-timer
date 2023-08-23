@@ -80,7 +80,7 @@ void loop() {
       // CASE 2 : LAP CALCULATION IN PROGRESS
 			//Serial.println("LAP CALCULATION IN PROGRESS");
       startLapMeasurement(detectedLight);
-      radioComm()
+      radioComm();
 			break; 
 		}
   }
@@ -193,7 +193,6 @@ void startLapMeasurement(int lightLevel){
 
 
 void radioComm(){
-
   /* Basato sull'esempio "YourDuinoStarter Example: nRF24L01 Transmit Joystick values"
  http://arduino-info.wikispaces.com/Nrf24L01-2.4GHz-HowTo
  http://www.danielealberti.it/2016/01/ricetrasmettitori-rf-per-arduino.html
@@ -215,16 +214,20 @@ void radioComm(){
     while (!done){
       // ricevi il messaggio
       radio.read( datatoreceive, sizeof(datatoreceive) );
-      if(datatoreceive[0] == 1){
+      if(datatoreceive[0] == 1 && datatoreceive[1] == 1 && datatoreceive[2] == 9 && datatoreceive[3] == 5){
+        digitalWrite(buzzerPin, HIGH);
+        delay(200);
+        digitalWrite(buzzerPin, LOW);
+        delay(200);
         Serial.println("DATA TO RECEIVE :");
-      Serial.print(datatoreceive[0]);
-      Serial.print(" ");
-            Serial.print(datatoreceive[1]);
-      Serial.print(" ");
-            Serial.print(datatoreceive[2]);
-      Serial.print(" ");
-            Serial.print(datatoreceive[3]);
-      Serial.println(" ");
+        Serial.print(datatoreceive[0]);
+        Serial.print(" ");
+        Serial.print(datatoreceive[1]);
+        Serial.print(" ");
+        Serial.print(datatoreceive[2]);
+        Serial.print(" ");
+        Serial.print(datatoreceive[3]);
+        Serial.println(" ");
       }
     }
   }
