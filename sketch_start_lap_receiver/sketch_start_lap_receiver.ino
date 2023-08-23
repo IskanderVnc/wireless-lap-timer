@@ -73,12 +73,15 @@ void loop() {
   switch (systemStatus) { 	
     case 0: 
       // CASE 0 : IDLE ( Start lap not pressed or computation terminated / no calibration in progress or calibration just terminated)
+      radio.flush_rx();
       if(isCalibrated == true && firstStart == false){
       lcdPrintFirstLine("IDLE...CALIBRATION OK"); 
+      digitalWrite(greenLedPin,HIGH);
       } else if(isCalibrated == false && firstStart == true){
-        lcdPrintFirstLine("NEED CALIBRATION ");
+        lcdPrintFirstLine("CALIBRATE LASER TO START ");
+        digitalWrite(redLedPin,HIGH);
       } else if(isCalibrated == false && firstStart == false){
-        lcdPrintFirstLine("LOST CALIBRATION !");
+        lcdPrintFirstLine("CALIBRATION LOST !");
       }
       checkCalibration(detectedLight);
       if(lastComputedLap != -1){
@@ -95,7 +98,9 @@ void loop() {
 
 		case 2: 
       // CASE 2 : LAP CALCULATION IN PROGRESS
+      Serial.println("LAP CALCULATION");
 			lcdPrintFirstLine("LAP CALCULATION IN PROGRESS");
+      readButtonWithDebouncing(button2Pin,button2State,lastButton2State);
       startLapMeasurement(detectedLight);
 			break; 
 		}
@@ -124,8 +129,16 @@ void readButtonWithDebouncing(int buttonPin, int &buttonState, int &lastButtonSt
       buttonState = reading;
       // only toggle the LED if the new button state is HIGH
       if (buttonState == HIGH) {
-        if(buttonPin == 19)
-          systemStatus = 2;
+        if(buttonPin == 19){
+          if(systemStatus != 2){
+            systemStatus = 2;
+          } else {
+            goneThrough = false;
+            systemStatus = 0;
+          }
+          
+        } 
+          
         else 
           systemStatus = !systemStatus;
       }
@@ -228,7 +241,7 @@ void radioComm(){
  8 - UNUSED
  */
 
-  if ( radio.available() ){
+  if ( radio.available() && (millis()-start > 5)){
     //Serial.println("RADIO AVAILABLE");
     // leggi i dati in ricezione finchè il messaggio è completo
     bool done = false;
