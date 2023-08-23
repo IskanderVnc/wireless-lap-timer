@@ -4,6 +4,7 @@
 #define CE_PIN   9
 #define CSN_PIN 10
 
+int statusLed = 5;
 int buzzer = 6;
 int triggerPort = 7;
 int echoPort = 8;
@@ -19,11 +20,13 @@ void setup() {
 pinMode( triggerPort, OUTPUT );
 pinMode( echoPort, INPUT );
 pinMode( buzzer, OUTPUT );
+pinMode(statusLed,OUTPUT);
 Serial.begin( 9600 );
 radio.begin();
 radio.openWritingPipe(pipe);
 }
 void loop() {
+  digitalWrite(statusLed,HIGH);
 //trigger output set to LOW
 digitalWrite( triggerPort, LOW );
 //send 10microsec impulse on trigger
