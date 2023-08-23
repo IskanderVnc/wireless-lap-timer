@@ -1,15 +1,27 @@
+#include <SPI.h>
+#include <nRF24L01.h>
+#include <RF24.h>
+#define CE_PIN   9
+#define CSN_PIN 10
+
+int buzzer = 6;
 int triggerPort = 7;
 int echoPort = 8;
-int buzzer = 9;
-unsigned long time;
-unsigned long lampeggio_time;
-unsigned long pausa_time;
+
+
+// WIRELESS COMMUNICATION DETAILS //
+const uint64_t pipe = 0xE8E8F0F0E1LL; // Defines the communication channel
+RF24 radio(CE_PIN, CSN_PIN); // Sets up the communication
+int datatosend[4] = {1,1,9,5};
+// ----------------------------- //
+
 void setup() {
 pinMode( triggerPort, OUTPUT );
 pinMode( echoPort, INPUT );
 pinMode( buzzer, OUTPUT );
 Serial.begin( 9600 );
-Serial.println( "Ultrasounds sensor : ");
+radio.begin();
+radio.openWritingPipe(pipe);
 }
 void loop() {
 //trigger output set to LOW
@@ -24,7 +36,9 @@ Serial.println(r);
 // If distance detected is within specified range : Object detected => Activate buzzer for audio feedback and send data to receiver;
 if( r>=40 && r<=100){
 Serial.println("END LAP");
-enableBuzzer();
+//enableBuzzer();
+// SET UP HERE THE DATA TRANSMISSION TO RECEIVER //
+  	signalLapCompletionToReceiver();
 }
 delay(10);
 }
@@ -46,3 +60,6 @@ void enableBuzzer(){
   }
 }
 
+void signalLapCompletionToReceiver(){
+	radio.write (datatosend, sizeof(datatosend)) ;
+}
