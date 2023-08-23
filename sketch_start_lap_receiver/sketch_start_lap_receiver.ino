@@ -32,10 +32,8 @@ int systemStatus = 0;
 bool printFlag = true;
 bool goneThrough = false;
 
-const uint64_t pipe = 0xE8E8F0F0E1LL; // Definisce il canale di trasmissione
-RF24 radio(CE_PIN, CSN_PIN); // Stabilisce la comunicazione
-int ledpin1 = 6;
-int ledpin2 = 7;
+const uint64_t pipe = 0xE8E8F0F0E1LL; // Defines the communication channel
+RF24 radio(CE_PIN, CSN_PIN); // Sets up the communication
 int datatoreceive[4];
 
 
