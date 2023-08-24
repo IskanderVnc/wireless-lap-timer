@@ -130,6 +130,10 @@ void readButtonWithDebouncing(int buttonPin, int &buttonState, int &lastButtonSt
       // only toggle the LED if the new button state is HIGH
       if (buttonState == HIGH) {
         if(buttonPin == 19){
+        digitalWrite(buzzerPin, HIGH);
+        delay(150);
+        digitalWrite(buzzerPin, LOW);
+        lcd.clear();
           if(systemStatus != 2){
             systemStatus = 2;
           } else {
@@ -257,6 +261,7 @@ void radioComm(){
         delay(200);
         digitalWrite(buzzerPin, LOW);
         delay(200);
+        lcd.clear();
         /*Serial.println("DATA TO RECEIVE :");
         Serial.print(datatoreceive[0]);
         Serial.print(" ");
