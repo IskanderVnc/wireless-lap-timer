@@ -249,14 +249,14 @@ void radioComm(){
       // ricevi il messaggio
       radio.read( datatoreceive, sizeof(datatoreceive) );
       if(datatoreceive[0] == 1 && datatoreceive[1] == 1 && datatoreceive[2] == 9 && datatoreceive[3] == 5){
+        lastComputedLap =  float(millis() - start)/float(1000);
+        goneThrough = false;
+        systemStatus = 0;
         done = true;
         digitalWrite(buzzerPin, HIGH);
         delay(200);
         digitalWrite(buzzerPin, LOW);
         delay(200);
-        goneThrough = false;
-        systemStatus = 0;
-        lastComputedLap =  float(millis() - start)/float(1000);
         /*Serial.println("DATA TO RECEIVE :");
         Serial.print(datatoreceive[0]);
         Serial.print(" ");
