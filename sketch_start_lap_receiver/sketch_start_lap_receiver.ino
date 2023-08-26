@@ -16,7 +16,7 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 int laserLightThreshold = 750;
 
-// BUTTON 1-2 WITH DEBOUNCING //
+// BUTTON 1-2 WITH DEBOUNCING : BUTTON 1 = CALIBRATE ; BUTTON 2 = START//
 int button1Pin = 18;
 int button1State = 0;
 int lastButton1State = LOW;  // the previous reading from the input pin
@@ -245,7 +245,8 @@ void radioComm(){
  8 - UNUSED
  */
 
-  if ( radio.available() && (millis()-start > 5)){
+// Add "&& (millis()-start > 5000" in the if - if a minimum threshold is needed
+  if ( radio.available() )){
     //Serial.println("RADIO AVAILABLE");
     // leggi i dati in ricezione finchè il messaggio è completo
     bool done = false;

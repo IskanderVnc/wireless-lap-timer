@@ -35,12 +35,13 @@ delayMicroseconds( 10 );
 digitalWrite( triggerPort, LOW );
 long duration = pulseIn( echoPort, HIGH );
 long r = 0.034 * duration / 2;
-Serial.println(r);
+//Serial.println(r);
 // If distance detected is within specified range : Object detected => Activate buzzer for audio feedback and send data to receiver;
 if( r>=40 && r<=100){
 Serial.println("END LAP");
-//enableBuzzer();
-// SET UP HERE THE DATA TRANSMISSION TO RECEIVER //
+	// Uncomment following function if the buzzer is being used to give audio feedback at the end of the lap
+	//enableBuzzer();
+	// SET UP HERE THE DATA TRANSMISSION TO RECEIVER //
   	signalLapCompletionToReceiver();
 }
 delay(10);
