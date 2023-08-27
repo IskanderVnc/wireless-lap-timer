@@ -37,7 +37,7 @@ long duration = pulseIn( echoPort, HIGH );
 long r = 0.034 * duration / 2;
 //Serial.println(r);
 // If distance detected is within specified range : Object detected => Activate buzzer for audio feedback and send data to receiver;
-if( r>=40 && r<=100){
+if( r>=5 && r<=60){
 Serial.println("END LAP");
 	// Uncomment following function if the buzzer is being used to give audio feedback at the end of the lap
 	//enableBuzzer();
