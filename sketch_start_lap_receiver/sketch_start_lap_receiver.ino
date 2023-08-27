@@ -36,14 +36,21 @@ int calibrating = false;
 int systemStatus = 0;
 bool printFlag = true;
 bool goneThrough = false;
+bool buzzerEnabled = true;
+int buzzerState = LOW;
 
 const uint64_t pipe = 0xE8E8F0F0E1LL; // Defines the communication channel
 RF24 radio(CE_PIN, CSN_PIN); // Sets up the communication
 int datatoreceive[4];
 float lastComputedLap = -1;
 
+uint8_t checkmarkSymbol[8] = {0x0,0x1,0x3,0x16,0x1c,0x8,0x0};
+uint8_t clock[8] = {0x0,0xe,0x15,0x17,0x11,0xe,0x0};
+
 void setup() {
   // put your setup code here, to run once:
+  lcd.createChar(0, checkmarkSymbol); // create a new custom character (index 0)
+  lcd.createChar(1, clock); // create a new custom character (index 1)
   pinMode(redLedPin,OUTPUT);
   pinMode(greenLedPin,OUTPUT);
   pinMode(button1Pin,INPUT);
@@ -65,7 +72,9 @@ void loop() {
     readButtonWithDebouncing(button2Pin,button2State,lastButton2State);
     digitalWrite(redLedPin, LOW);  
   } else {
+	  if(!isCalibrated){
     digitalWrite(redLedPin, HIGH);
+	  } else digitalWrite(redLedPin,LOW);
     readButtonWithDebouncing(button1Pin,button1State,lastButton1State);
   }
   Serial.print("SystemSTATUS :");
@@ -75,20 +84,26 @@ void loop() {
       // CASE 0 : IDLE ( Start lap not pressed or computation terminated / no calibration in progress or calibration just terminated)
       radio.flush_rx();
       if(isCalibrated == true && firstStart == false){
-      lcdPrintFirstLine("IDLE...CALIBRATION OK"); 
+      lcdPrintFirstLine("IDLE... CALIBRATED "); 
+      lcdPrintSecondLine(isCalibrated,-1);
       digitalWrite(greenLedPin,HIGH);
       } else if(isCalibrated == false && firstStart == true){
-        lcdPrintFirstLine("CALIBRATE LASER TO START ");
+        lcdPrintFirstLine("CALIBRATE LASER TO START");
+        lcdPrintSecondLine(isCalibrated,-1);
         digitalWrite(redLedPin,HIGH);
       } else if(isCalibrated == false && firstStart == false){
         lcdPrintFirstLineNoScrolling("CALIBRATION LOST !");
+        lcdPrintSecondLine(isCalibrated,-1);
       }
       Serial.println("IDLE");
       checkCalibration(detectedLight);
       if(lastComputedLap != -1){
         //Serial.println(lastComputedLap);
-        lcdPrintSecondLine(lastComputedLap);
+        lcd.clear();
+        lcdPrintSecondLine(isCalibrated,lastComputedLap);
       }
+      buzzerEnabled = true;
+      buzzerState = LOW;
 			break;
 
 		case 1: 
@@ -134,11 +149,15 @@ void readButtonWithDebouncing(int buttonPin, int &buttonState, int &lastButtonSt
           if(systemStatus != 2){
             systemStatus = 2;
             goneThrough = false;
+           digitalWrite(buzzerPin, HIGH);
+        delay(150);
+        digitalWrite(buzzerPin, LOW);
           } else {
-            //checkCalibration(detectedLight);
             Serial.println("SETTING SYS STATUS TO 0 AFTER BUTTON PRESSURE");
             systemStatus = 0;
-           // goneThrough = false;
+        digitalWrite(buzzerPin, HIGH);
+        delay(150);
+        digitalWrite(buzzerPin, LOW);
           }
         lcd.clear();
         } else  {
@@ -163,7 +182,7 @@ void calibrateLaser(int lightLevel){
   long start = millis();
   bool calibrationCheck = true;
   digitalWrite(greenLedPin, HIGH);
-  while(millis() - start < 5000){
+  while(millis() - start < 3000){
       long readLaser = analogRead(photoresistorPin);
       if (readLaser < laserLightThreshold){
           calibrationCheck = false;
@@ -219,7 +238,6 @@ void checkCalibration(int lightLevel){
 
 
 long start = 0;
-int buzzerCounter = 0;
 void startLapMeasurement(int lightLevel){
   blinkingLedWithoutDelay(greenLedPin);
   if (lightLevel < laserLightThreshold && goneThrough == false){
@@ -232,7 +250,7 @@ void startLapMeasurement(int lightLevel){
   { 
     Serial.println("GONE THROUGH");
     buzzerOnOff(buzzerPin);
-    lcdPrintSecondLine(float(millis() - start)/float(1000));
+    lcdPrintSecondLine(isCalibrated,float(millis() - start)/float(1000));
     radioComm();
 }
 }
@@ -244,42 +262,34 @@ void radioComm(){
     // leggi i dati in ricezione finchè il messaggio è completo
     bool done = false;
     while (!done){
-      // ricevi il messaggio
+      // Open message
       radio.read( datatoreceive, sizeof(datatoreceive) );
       if(datatoreceive[0] == 1 && datatoreceive[1] == 1 && datatoreceive[2] == 9 && datatoreceive[3] == 5){
         lastComputedLap =  float(millis() - start)/float(1000);
         goneThrough = false;
         systemStatus = 0;
         done = true;
-        buzzerCounter = 0;
         digitalWrite(buzzerPin, HIGH);
         delay(200);
         digitalWrite(buzzerPin, LOW);
         delay(200);
         lcd.clear();
-        /*Serial.println("DATA TO RECEIVE :");
-        Serial.print(datatoreceive[0]);
-        Serial.print(" ");
-        Serial.print(datatoreceive[1]);
-        Serial.print(" ");
-        Serial.print(datatoreceive[2]);
-        Serial.print(" ");
-        Serial.print(datatoreceive[3]);
-        Serial.println(" ");*/
       }
     }
   }
 }
 
 // VARIABLES BUZZER ON/OFF //
-int buzzerState = LOW;
+
 unsigned long previousMillisBuzzer = 0;  // will store last time Buzzer state was updated
-const long intervalBuzzer = 200;  // interval at which to on/off buzzer (milliseconds)
+const long intervalBuzzer = 800;  // interval at which to on/off buzzer (milliseconds)
 
 void buzzerOnOff(int buzzerPin){
-    unsigned long currentMillis = millis();
-  if (currentMillis - previousMillisBuzzer >= intervalBuzzer && buzzerCounter < 9) {
-        buzzerCounter++;
+  unsigned long currentMillis;
+  if(buzzerEnabled){
+    Serial.println(" AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA BUZZER ENABLED TRUE AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+    currentMillis = millis();
+  if (currentMillis - previousMillisBuzzer >= intervalBuzzer) {
     // save the last time you enabled the buzzer
     previousMillisBuzzer = currentMillis;
 
@@ -289,13 +299,13 @@ void buzzerOnOff(int buzzerPin){
       buzzerState = HIGH;
     } else {
       Serial.println("SETTING BUZZER TO LOW");
+      buzzerEnabled = false;
       buzzerState = LOW;
     }
 
     // set the buzzer with the buzzerState of the variable:
     digitalWrite(buzzerPin, buzzerState);
-  } else {
-    digitalWrite(buzzerPin,LOW);
+  }
   }
 }
 
@@ -335,9 +345,40 @@ void lcdPrintFirstLineNoScrolling(char* wordPrint){
   delay(150);
 }
 
-void lcdPrintSecondLine(float value){
+
+void lcdPrintSecondLine(bool isCalibrated, float time){
+
+  if(systemStatus != 2){
+	if(!isCalibrated){
+    			lcd.setCursor(0,1);
+      lcd.print("NOT READY ");
+  } else {
+    if(lastComputedLap == -1){
+          lcd.setCursor(0,1);
+      lcd.print("READY     ");
+      lcd.setCursor(6,1);
+      lcd.write((byte)0);
+    } else {
+      lcd.setCursor(0,1);
+      lcd.print("READY     ");
+      lcd.setCursor(5,1);
+      lcd.write((byte)0);
+      lcd.setCursor(7,1);
+      lcd.print("L:");
+      lcd.setCursor(10,1);
+      lcd.print(lastComputedLap);
+      lcd.setCursor(15,1);
+      lcd.print("s");
+    }
+  }
+  } else {
   lcd.setCursor(0, 1);
-  lcd.print(value);
+  lcd.write((byte)1);
+  lcd.setCursor(2,1);
+  lcd.print(time);
+  lcd.setCursor(7,1);
+  lcd.print(" s");
+  }
 }
 
 int i = 16;
