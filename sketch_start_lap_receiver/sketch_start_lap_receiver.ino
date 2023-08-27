@@ -216,8 +216,18 @@ void calibrateLaser(int lightLevel){
 
 
 void checkCalibration(int lightLevel){
-  long start = millis();
+  
   if(lightLevel < laserLightThreshold && isCalibrated == true) {
+    long start = millis();
+    bool calibrationCheck = false;
+    while(millis() - start < 1500){
+       long readLaser = analogRead(photoresistorPin);
+      if (readLaser > laserLightThreshold){
+          calibrationCheck = true;
+          break;
+        }
+    }
+      if(calibrationCheck == false){
     lcd.clear();
     Serial.println("CALIBRATION LOST!!!");
     lcdPrintFirstLineNoScrolling("LOST CALIBRATION");
@@ -233,6 +243,7 @@ void checkCalibration(int lightLevel){
       digitalWrite(redLedPin, HIGH);
       delay(100);
     }
+  }
   }  
 }
 
