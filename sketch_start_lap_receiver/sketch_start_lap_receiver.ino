@@ -14,7 +14,7 @@ int photoresistorPin = A0;
 const int rs = 7, en = 6, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
-int laserLightThreshold = 750;
+
 
 // BUTTON 1-2 WITH DEBOUNCING : BUTTON 1 = CALIBRATE ; BUTTON 2 = START//
 int button1Pin = 18;
@@ -29,6 +29,7 @@ int lastButton2State = LOW;
 unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
 unsigned long debounceDelay = 50;    // the debounce time; increase if the output flickers
 
+int laserLightThreshold = 750; 
 bool firstStart = true;
 bool isCalibrated = false;
 int detectedLight = 0;
@@ -67,7 +68,7 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   detectedLight = analogRead(photoresistorPin);
-  //Serial.println(detectedLight);
+  Serial.println(detectedLight);
   if (isCalibrated && systemStatus != 2){
     readButtonWithDebouncing(button2Pin,button2State,lastButton2State);
     digitalWrite(redLedPin, LOW);  
@@ -84,11 +85,11 @@ void loop() {
       // CASE 0 : IDLE ( Start lap not pressed or computation terminated / no calibration in progress or calibration just terminated)
       radio.flush_rx();
       if(isCalibrated == true && firstStart == false){
-      lcdPrintFirstLine("IDLE... CALIBRATED "); 
+      lcdPrintFirstLine("Press 'START'"); 
       lcdPrintSecondLine(isCalibrated,-1);
       digitalWrite(greenLedPin,HIGH);
       } else if(isCalibrated == false && firstStart == true){
-        lcdPrintFirstLine("CALIBRATE LASER TO START");
+        lcdPrintFirstLine("Press 'CALIBRATE' and align laser");
         lcdPrintSecondLine(isCalibrated,-1);
         digitalWrite(redLedPin,HIGH);
       } else if(isCalibrated == false && firstStart == false){
@@ -115,7 +116,11 @@ void loop() {
 		case 2: 
       // CASE 2 : LAP CALCULATION IN PROGRESS
       //Serial.println("LAP CALCULATION");
-			lcdPrintFirstLine("LAP CALCULATION IN PROGRESS");
+      if(goneThrough == false){
+			lcdPrintFirstLine("Ready to start timer");
+      } else {
+        lcdPrintFirstLine("... Lap in progress ...");
+      }
       readButtonWithDebouncing(button2Pin,button2State,lastButton2State);
       startLapMeasurement(detectedLight);
 			break; 
@@ -255,6 +260,7 @@ void startLapMeasurement(int lightLevel){
     Serial.println("LAP STARTED AND GONE THROUGH SET TO TRUE");
     buzzerOnOff(buzzerPin);
     goneThrough = true;
+    radio.flush_rx();
     start = millis();
   }
   if (goneThrough)
@@ -298,7 +304,7 @@ const long intervalBuzzer = 800;  // interval at which to on/off buzzer (millise
 void buzzerOnOff(int buzzerPin){
   unsigned long currentMillis;
   if(buzzerEnabled){
-    Serial.println(" AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA BUZZER ENABLED TRUE AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+    //Serial.println(" AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA BUZZER ENABLED TRUE AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
     currentMillis = millis();
   if (currentMillis - previousMillisBuzzer >= intervalBuzzer) {
     // save the last time you enabled the buzzer
@@ -361,8 +367,17 @@ void lcdPrintSecondLine(bool isCalibrated, float time){
 
   if(systemStatus != 2){
 	if(!isCalibrated){
-    			lcd.setCursor(0,1);
-      lcd.print("NOT READY ");
+      if(lastComputedLap != -1){
+      lcd.setCursor(0,1);
+      lcd.print("Last lap:");
+         lcd.setCursor(10,1);
+      lcd.print(lastComputedLap);
+      lcd.setCursor(15,1);
+      lcd.print("s");
+      }else{
+      lcd.setCursor(0,1);
+      lcd.print("NOT READY");
+      }
   } else {
     if(lastComputedLap == -1){
           lcd.setCursor(0,1);
